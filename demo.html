@@ -3,78 +3,334 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bảng Chia Việc Nhóm - Upload Cloud</title>
+<title>Bảng Chia Việc Nhóm - Shared</title>
 <style>
-body { font-family: Arial; padding: 20px; }
-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-table, th, td { border: 1px solid #333; }
-th, td { padding: 10px; text-align: left; }
-th { background-color: #f2f2f2; }
-td[contenteditable="true"] { background-color: #f9f9f9; }
-button { margin-right: 10px; padding: 10px 15px; cursor: pointer; }
-#dashboard { margin-top: 20px; padding: 10px; border: 1px solid #333; width: 300px; }
-#fileList { border:1px solid #333; padding:10px; max-height:200px; overflow:auto; background:#f9f9f9; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { 
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+  padding: 20px; 
+  max-width: 1200px; 
+  margin: 0 auto;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+.container {
+  background: white;
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+h1 { 
+  color: #667eea; 
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 2em;
+}
+table { 
+  width: 100%; 
+  border-collapse: collapse; 
+  margin: 20px 0;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+th, td { 
+  padding: 15px; 
+  text-align: left; 
+  border-bottom: 1px solid #e0e0e0;
+}
+th { 
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.9em;
+}
+tr:hover { background-color: #f8f9ff; }
+td[contenteditable="true"] { 
+  background-color: #f9f9f9;
+  cursor: text;
+  border-radius: 4px;
+  padding: 10px;
+}
+td[contenteditable="true"]:focus {
+  background-color: #fff;
+  outline: 2px solid #667eea;
+}
+button { 
+  margin: 10px 10px 10px 0; 
+  padding: 12px 24px; 
+  cursor: pointer; 
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white; 
+  border: none; 
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s;
+  font-size: 0.95em;
+}
+button:hover { 
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+button:disabled { 
+  background: #ccc; 
+  cursor: not-allowed;
+  transform: none;
+}
+#dashboard { 
+  margin: 20px 0; 
+  padding: 20px; 
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+#dashboard h2 { color: white; margin-bottom: 10px; }
+#status { font-size: 1.2em; font-weight: 600; }
+.upload-section {
+  background: #f8f9ff;
+  padding: 25px;
+  border-radius: 10px;
+  margin: 20px 0;
+  border: 2px dashed #667eea;
+}
+.upload-section h2 {
+  color: #667eea;
+  margin-bottom: 15px;
+}
+#fileList { 
+  border: 1px solid #e0e0e0; 
+  padding: 15px; 
+  max-height: 400px; 
+  overflow: auto; 
+  background: white;
+  border-radius: 8px;
+  margin-top: 15px;
+}
+.file-item { 
+  padding: 12px; 
+  margin: 8px 0; 
+  background: white;
+  border: 1px solid #e0e0e0; 
+  border-radius: 8px;
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center;
+  transition: all 0.3s;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+.file-item:hover { 
+  background: #f8f9ff;
+  transform: translateX(5px);
+  box-shadow: 0 4px 10px rgba(102, 126, 234, 0.2);
+}
+.file-item a { 
+  text-decoration: none; 
+  color: #667eea; 
+  flex-grow: 1;
+  font-weight: 500;
+}
+.file-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 0.85em;
+  color: #666;
+}
+.file-size { color: #999; }
+.file-date { color: #999; margin-top: 3px; }
+.file-uploader { color: #764ba2; font-weight: 600; }
+.progress-bar { 
+  width: 100%; 
+  height: 30px; 
+  background: #e0e0e0; 
+  border-radius: 15px; 
+  overflow: hidden; 
+  margin-top: 15px; 
+  display: none;
+  box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+}
+.progress-fill { 
+  height: 100%; 
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  transition: width 0.3s; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  color: white; 
+  font-weight: bold;
+  font-size: 0.9em;
+}
+.status-msg { 
+  margin-top: 15px; 
+  padding: 12px; 
+  border-radius: 8px; 
+  display: none;
+  font-weight: 500;
+}
+.status-success { background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
+.status-error { background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }
+.status-info { background: #d1ecf1; color: #0c5460; border-left: 4px solid #17a2b8; }
+.file-input-wrapper { position: relative; display: inline-block; margin-right: 10px; }
+#fileInput { display: none; }
+.file-label { 
+  display: inline-block; 
+  padding: 12px 24px; 
+  background: white;
+  color: #667eea; 
+  border: 2px solid #667eea;
+  border-radius: 8px; 
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+.file-label:hover { 
+  background: #667eea;
+  color: white;
+  transform: translateY(-2px);
+}
+.selected-file { 
+  margin-top: 15px; 
+  padding: 12px; 
+  background: white; 
+  border: 1px solid #667eea; 
+  border-radius: 8px; 
+  display: none;
+}
+.input-group {
+  margin-bottom: 15px;
+}
+.input-group label {
+  display: block;
+  margin-bottom: 5px;
+  color: #667eea;
+  font-weight: 600;
+}
+.input-group input {
+  width: 100%;
+  max-width: 300px;
+  padding: 10px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1em;
+  transition: border 0.3s;
+}
+.input-group input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: #999;
+}
+.empty-state svg {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 20px;
+  opacity: 0.3;
+}
+@media (max-width: 768px) {
+  body { padding: 10px; }
+  .container { padding: 15px; }
+  table { font-size: 0.9em; }
+  th, td { padding: 8px; }
+  button { padding: 10px 15px; font-size: 0.85em; }
+}
 </style>
 </head>
 <body>
 
-<h1>Bảng Chia Việc Nhóm</h1>
+<div class="container">
+  <h1>📋 Bảng Chia Việc Nhóm</h1>
 
-<table id="taskTable">
-  <thead>
-    <tr>
-      <th>STT</th>
-      <th>Nhiệm vụ</th>
-      <th>Người thực hiện</th>
-      <th>Nội dung</th>
-      <th>Hoàn thành</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>1</td>
-      <td>Thiết kế giao diện</td>
-      <td>Yến</td>
-      <td contenteditable="true">Nhập nội dung ở đây</td>
-      <td><input type="checkbox" class="complete"></td>
-    </tr>
-    <tr>
-      <td>2</td>
-      <td>Code backend</td>
-      <td>Quỳnh</td>
-      <td contenteditable="true">Nhập nội dung ở đây</td>
-      <td><input type="checkbox" class="complete"></td>
-    </tr>
-    <tr>
-      <td>3</td>
-      <td>Code backend</td>
-      <td>Thảo</td>
-      <td contenteditable="true">Nhập nội dung ở đây</td>
-      <td><input type="checkbox" class="complete"></td>
-    </tr>
-    <tr>
-      <td>4</td>
-      <td>Code backend</td>
-      <td>Phi</td>
-      <td contenteditable="true">Nhập nội dung ở đây</td>
-      <td><input type="checkbox" class="complete"></td>
-    </tr>
-  </tbody>
-</table>
+  <table id="taskTable">
+    <thead>
+      <tr>
+        <th>STT</th>
+        <th>Nhiệm vụ</th>
+        <th>Người thực hiện</th>
+        <th>Nội dung</th>
+        <th>Hoàn thành</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>Thiết kế giao diện</td>
+        <td>Yến</td>
+        <td contenteditable="true">Nhập nội dung ở đây</td>
+        <td><input type="checkbox" class="complete"></td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>Code backend</td>
+        <td>Quỳnh</td>
+        <td contenteditable="true">Nhập nội dung ở đây</td>
+        <td><input type="checkbox" class="complete"></td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>Code backend</td>
+        <td>Thảo</td>
+        <td contenteditable="true">Nhập nội dung ở đây</td>
+        <td><input type="checkbox" class="complete"></td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>Code backend</td>
+        <td>Phi</td>
+        <td contenteditable="true">Nhập nội dung ở đây</td>
+        <td><input type="checkbox" class="complete"></td>
+      </tr>
+    </tbody>
+  </table>
 
-<button onclick="exportExcel()">Xuất Excel</button>
-<button onclick="exportWord()">Xuất Word</button>
+  <div>
+    <button onclick="exportExcel()">Xuất Excel</button>
+    <button onclick="exportWord()"> Xuất Word</button>
+  </div>
 
-<h2>Nộp File Bảng</h2>
-<input type="file" id="fileInput" />
-<button onclick="uploadFile()">Upload File</button>
+  <div id="dashboard">
+    <h2>Tiến Độ Công Việc</h2>
+    <p id="status">Hoàn thành: 0 / Tổng: 4</p>
+  </div>
 
-<h2>Danh sách file đã nộp:</h2>
-<div id="fileList">Chưa có file nào.</div>
+  <div class="upload-section">
+    <h2>Nộp File Bài Làm</h2>
+    
+    <div class="input-group">
+      <label for="uploaderName">Tên của bạn:</label>
+      <input type="text" id="uploaderName" placeholder="Nhập tên của bạn" />
+    </div>
+    
+    <div class="file-input-wrapper">
+      <input type="file" id="fileInput" onchange="displaySelectedFile()" />
+      <label for="fileInput" class="file-label">Chọn File</label>
+    </div>
+    
+    <button id="uploadBtn" onclick="uploadFile()" disabled>🚀 Upload File</button>
+    
+    <div id="selectedFile" class="selected-file"></div>
+    
+    <div class="progress-bar" id="progressBar">
+      <div class="progress-fill" id="progressFill">0%</div>
+    </div>
+    
+    <div id="statusMsg" class="status-msg"></div>
+  </div>
 
-<div id="dashboard">
-  <h2>Dashboard</h2>
-  <p id="status">Hoàn thành: 0 / Tổng: 4</p>
+  <h2>Danh Sách File Đã Nộp</h2>
+  <div id="fileList">
+    <div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+      </svg>
+      <p>Đang tải danh sách file...</p>
+    </div>
+  </div>
 </div>
 
 <!-- Firebase SDK -->
@@ -84,96 +340,292 @@ button { margin-right: 10px; padding: 10px 15px; cursor: pointer; }
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
 <script>
-// Firebase config
+// Firebase Configuration - QUAN TRỌNG: Thay bằng config của bạn
 const firebaseConfig = {
-  apiKey: "API_KEY",
-  authDomain: "PROJECT_ID.firebaseapp.com",
-  projectId: "PROJECT_ID",
-  storageBucket: "PROJECT_ID.appspot.com",
-  messagingSenderId: "SENDER_ID",
-  appId: "APP_ID"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 
-firebase.initializeApp(firebaseConfig);
-const storage = firebase.storage();
-const db = firebase.firestore();
+let firebaseInitialized = false;
+try {
+  firebase.initializeApp(firebaseConfig);
+  firebaseInitialized = true;
+  console.log("Firebase đã kết nối thành công!");
+} catch(error) {
+  console.error("Lỗi Firebase:", error);
+  document.getElementById('fileList').innerHTML = `
+    <div class="empty-state">
+      <p style="color: #dc3545;">⚠️ Chưa cấu hình Firebase. Vui lòng xem hướng dẫn bên dưới.</p>
+    </div>
+  `;
+}
 
-// DOM
+const storage = firebaseInitialized ? firebase.storage() : null;
+const db = firebaseInitialized ? firebase.firestore() : null;
+
+// DOM Elements
 const taskTable = document.getElementById("taskTable").getElementsByTagName('tbody')[0];
 const statusText = document.getElementById("status");
 const fileList = document.getElementById('fileList');
+const progressBar = document.getElementById('progressBar');
+const progressFill = document.getElementById('progressFill');
+const statusMsg = document.getElementById('statusMsg');
+const uploadBtn = document.getElementById('uploadBtn');
+const uploaderNameInput = document.getElementById('uploaderName');
+
+// Lưu tên người dùng vào localStorage
+uploaderNameInput.addEventListener('change', function() {
+  localStorage.setItem('uploaderName', this.value);
+});
+
+// Load tên đã lưu
+const savedName = localStorage.getItem('uploaderName');
+if (savedName) {
+  uploaderNameInput.value = savedName;
+}
 
 // Dashboard
 function updateDashboard() {
-    const checkboxes = document.querySelectorAll('.complete');
-    let completed = 0;
-    checkboxes.forEach(cb => { if(cb.checked) completed++; });
-    statusText.textContent = `Hoàn thành: ${completed} / Tổng: ${checkboxes.length}`;
+  const checkboxes = document.querySelectorAll('.complete');
+  let completed = 0;
+  checkboxes.forEach(cb => { if(cb.checked) completed++; });
+  statusText.textContent = `Hoàn thành: ${completed} / Tổng: ${checkboxes.length}`;
 }
+
 taskTable.addEventListener('change', function(e){
-    if(e.target.classList.contains('complete')) updateDashboard();
+  if(e.target.classList.contains('complete')) updateDashboard();
 });
 updateDashboard();
 
-// Xuất Excel/Word
-function exportExcel() {
-    let tableHTML = taskTable.parentElement.outerHTML.replace(/ /g, '%20');
-    const filename = 'tasks.xls';
-    const downloadLink = document.createElement("a");
-    downloadLink.href = 'data:application/vnd.ms-excel,' + tableHTML;
-    downloadLink.download = filename;
-    downloadLink.click();
-}
-function exportWord() {
-    let tableHTML = taskTable.parentElement.outerHTML;
-    const filename = 'tasks.doc';
-    const downloadLink = document.createElement("a");
-    downloadLink.href = 'data:application/msword,' + encodeURIComponent(tableHTML);
-    downloadLink.download = filename;
-    downloadLink.click();
+// Format file size
+function formatFileSize(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
 }
 
-// Upload file lên Firebase Storage
-function uploadFile() {
-    const file = document.getElementById('fileInput').files[0];
-    if(!file) return alert("Chưa chọn file!");
-    const storageRef = storage.ref('uploads/' + file.name);
-    const uploadTask = storageRef.put(file);
+//  Format date
+function formatDate(timestamp) {
+  if (!timestamp) return '';
+  const date = timestamp.toDate();
+  const now = new Date();
+  const diff = now - date;
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  
+  if (minutes < 1) return 'Vừa xong';
+  if (minutes < 60) return `${minutes} phút trước`;
+  if (hours < 24) return `${hours} giờ trước`;
+  if (days < 7) return `${days} ngày trước`;
+  
+  return date.toLocaleDateString('vi-VN');
+}
+
+// 📎 Display selected file
+function displaySelectedFile() {
+  const file = document.getElementById('fileInput').files[0];
+  const selectedFileDiv = document.getElementById('selectedFile');
+  const uploaderName = uploaderNameInput.value.trim();
+  
+  if (file && uploaderName) {
+    selectedFileDiv.style.display = 'block';
+    selectedFileDiv.innerHTML = `
+      <strong> ${file.name}</strong><br>
+      <span style="color:#666;">Kích thước: ${formatFileSize(file.size)}</span><br>
+      <span style="color:#764ba2;">Người nộp: ${uploaderName}</span>
+    `;
+    uploadBtn.disabled = false;
+  } else if (file && !uploaderName) {
+    selectedFileDiv.style.display = 'block';
+    selectedFileDiv.innerHTML = `
+      <strong style="color: #dc3545;">⚠️ Vui lòng nhập tên của bạn trước khi upload!</strong>
+    `;
+    uploadBtn.disabled = true;
+  } else {
+    selectedFileDiv.style.display = 'none';
+    uploadBtn.disabled = true;
+  }
+}
+
+// Also check when name input changes
+uploaderNameInput.addEventListener('input', displaySelectedFile);
+
+// Show status message
+function showStatus(message, type) {
+  statusMsg.textContent = message;
+  statusMsg.className = 'status-msg status-' + type;
+  statusMsg.style.display = 'block';
+}
+
+//  Upload file
+async function uploadFile() {
+  if (!firebaseInitialized) {
+    showStatus("Firebase chưa được cấu hình!", 'error');
+    return;
+  }
+
+  const file = document.getElementById('fileInput').files[0];
+  const uploaderName = uploaderNameInput.value.trim();
+  
+  if(!file) {
+    showStatus("Chưa chọn file!", 'error');
+    return;
+  }
+  
+  if(!uploaderName) {
+    showStatus("Vui lòng nhập tên của bạn!", 'error');
+    uploaderNameInput.focus();
+    return;
+  }
+
+  uploadBtn.disabled = true;
+  progressBar.style.display = 'block';
+  progressFill.style.width = '0%';
+  progressFill.textContent = '0%';
+  
+  try {
+    showStatus('Đang upload...', 'info');
+    
+    const timestamp = Date.now();
+    const fileName = `${timestamp}_${file.name}`;
+    const storageRef = storage.ref('uploads/' + fileName);
+    
+    const metadata = {
+      contentType: file.type,
+      customMetadata: {
+        uploaderName: uploaderName
+      }
+    };
+    
+    const uploadTask = storageRef.put(file, metadata);
 
     uploadTask.on('state_changed', 
-        snapshot => {}, 
-        error => { alert(error); },
-        () => {
-            uploadTask.snapshot.ref.getDownloadURL().then(url => {
-                // Lưu metadata vào Firestore
-                db.collection('files').add({
-                    name: file.name,
-                    url: url,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            });
-            alert('Upload thành công!');
+      snapshot => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        const roundedProgress = Math.round(progress);
+        progressFill.style.width = roundedProgress + '%';
+        progressFill.textContent = roundedProgress + '%';
+      }, 
+      error => { 
+        console.error("Upload error:", error);
+        showStatus('Lỗi: ' + error.message, 'error');
+        uploadBtn.disabled = false;
+        progressBar.style.display = 'none';
+      },
+      async () => {
+        const url = await uploadTask.snapshot.ref.getDownloadURL();
+        
+        // Lưu vào Firestore
+        await db.collection('files').add({
+          name: file.name,
+          url: url,
+          size: file.size,
+          uploaderName: uploaderName,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        showStatus('Upload thành công!', 'success');
+        document.getElementById('fileInput').value = '';
+        document.getElementById('selectedFile').style.display = 'none';
+        uploadBtn.disabled = false;
+        
+        setTimeout(() => {
+          progressBar.style.display = 'none';
+          statusMsg.style.display = 'none';
+        }, 3000);
+      }
+    );
+  } catch (error) {
+    console.error("Upload error:", error);
+    showStatus('Lỗi: ' + error.message, 'error');
+    uploadBtn.disabled = false;
+    progressBar.style.display = 'none';
+  }
+}
+
+// Load files - REALTIME cho mọi người
+function loadFiles() {
+  if (!firebaseInitialized) {
+    fileList.innerHTML = `
+      <div class="empty-state">
+        <p style="color: #dc3545;">Firebase chưa được cấu hình</p>
+      </div>
+    `;
+    return;
+  }
+
+  // Realtime listener - tự động cập nhật khi có file mới
+  db.collection('files')
+    .orderBy('timestamp', 'desc')
+    .onSnapshot(
+      snapshot => {
+        if(snapshot.empty) {
+          fileList.innerHTML = `
+            <div class="empty-state">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+              </svg>
+              <p>📭 Chưa có file nào được nộp</p>
+            </div>
+          `;
+          return;
         }
+        
+        fileList.innerHTML = "";
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const div = document.createElement('div');
+          div.className = 'file-item';
+          div.innerHTML = `
+            <a href="${data.url}" target="_blank" download>📎 ${data.name}</a>
+            <div class="file-meta">
+              <span class="file-uploader">👤 ${data.uploaderName || 'Ẩn danh'}</span>
+              <span class="file-size">${data.size ? formatFileSize(data.size) : ''}</span>
+              <span class="file-date">${formatDate(data.timestamp)}</span>
+            </div>
+          `;
+          fileList.appendChild(div);
+        });
+        
+        console.log(`Đã tải ${snapshot.size} files`);
+      },
+      error => {
+        console.error("Firestore error:", error);
+        fileList.innerHTML = `
+          <div class="empty-state">
+            <p style="color: #dc3545;">Lỗi tải file: ${error.message}</p>
+          </div>
+        `;
+      }
     );
 }
 
-// Hiển thị file đã nộp
-function loadFiles() {
-    db.collection('files').orderBy('timestamp').onSnapshot(snapshot => {
-        if(snapshot.empty) {
-            fileList.innerHTML = "Chưa có file nào.";
-            return;
-        }
-        fileList.innerHTML = "";
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            const div = document.createElement('div');
-            div.innerHTML = `<a href="${data.url}" target="_blank">${data.name}</a>`;
-            fileList.appendChild(div);
-        });
-    });
+// 📊 Export Excel
+function exportExcel() {
+  const wb = XLSX.utils.table_to_book(document.getElementById('taskTable'));
+  XLSX.writeFile(wb, `tasks_${Date.now()}.xlsx`);
 }
-loadFiles();
+
+// Export Word
+function exportWord() {
+  let tableHTML = document.getElementById('taskTable').outerHTML;
+  const downloadLink = document.createElement("a");
+  downloadLink.href = 'data:application/msword,' + encodeURIComponent(tableHTML);
+  downloadLink.download = `tasks_${Date.now()}.doc`;
+  downloadLink.click();
+}
+
+//  Initialize
+if (firebaseInitialized) {
+  loadFiles();
+}
 </script>
 
 </body>

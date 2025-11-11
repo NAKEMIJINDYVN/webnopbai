@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bảng Chia Việc Nhóm</title>
+<style>
+body { font-family: Arial, sans-serif; padding: 20px; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+table, th, td { border: 1px solid #333; }
+th, td { padding: 10px; text-align: left; }
+th { background-color: #f2f2f2; }
+td[contenteditable="true"] { background-color: #f9f9f9; }
+button { margin-right: 10px; padding: 10px 15px; cursor: pointer; }
+#dashboard { margin-top: 20px; padding: 10px; border: 1px solid #333; width: 300px; }
+#filePreview { border:1px solid #333; padding:10px; max-height:200px; overflow:auto; white-space: pre-wrap; background:#f9f9f9; }
+</style>
+</head>
+<body>
+
+<h1>Bảng Chia Việc Nhóm</h1>
+
+<table id="taskTable">
+  <thead>
+    <tr>
+      <th>STT</th>
+      <th>Nhiệm vụ</th>
+      <th>Người thực hiện</th>
+      <th>Nội dung</th>
+      <th>Hoàn thành</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>Thiết kế giao diện</td>
+      <td>Yến</td>
+      <td contenteditable="true">Nhập nội dung ở đây</td>
+      <td><input type="checkbox" class="complete"></td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>Code backend</td>
+      <td>Quỳnh</td>
+      <td contenteditable="true">Nhập nội dung ở đây</td>
+      <td><input type="checkbox" class="complete"></td>
+    </tr>
+
+
+    <tr>
+      <td>3</td>
+      <td>Code backend</td>
+      <td>Thảo</td>
+      <td contenteditable="true">Nhập nội dung ở đây</td>
+      <td><input type="checkbox" class="complete"></td>
+    </tr>
+
+
+    <tr>
+      <td>4</td>
+      <td>Code backend</td>
+      <td>Phi</td>
+      <td contenteditable="true">Nhập nội dung ở đây</td>
+      <td><input type="checkbox" class="complete"></td>
+    </tr>
+
+
+  </tbody>
+</table>
+
+<h2>Nộp File Bảng</h2>
+<form id="uploadForm">
+  <input type="file" id="fileInput" name="file" accept=".csv,.xls,.xlsx,.docx,.pdf">
+  <button type="submit">Upload & Submit</button>
+</form>
+
+<h2>File bạn vừa nộp:</h2>
+<pre id="filePreview"></pre>
+
+<div id="dashboard">
+  <h2>Dashboard</h2>
+  <p id="status">Hoàn thành: 0 / Tổng: 2</p>
+</div>
+
+<!-- Thư viện hỗ trợ đọc Excel và Word -->
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.172/pdf.min.js"></script>
+
+<script>
+const taskTable = document.getElementById("taskTable").getElementsByTagName('tbody')[0];
+const statusText = document.getElementById("status");
+const filePreview = document.getElementById('filePreview');
+
+function updateDashboard() {
+    const checkboxes = document.querySelectorAll('.complete');
+    let completed = 0;
+    checkboxes.forEach(cb => { if(cb.checked) completed++; });
+    statusText.textContent = `Hoàn thành: ${completed} / Tổng: ${checkboxes.length}`;
+}
+
+taskTable.addEventListener('change', function(e){
+    if(e.target.classList.contains('complete')) updateDashboard();
+});
+
+// Upload file
+document.getElementById('uploadForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    const file = document.getElementById('fileInput').files[0];
+    if(!file) return alert("Chưa chọn file!");
+    const name = file.name.toLowerCase();
+    const reader = new FileReader();
+
+    if(name.endsWith(".csv")) {
+        reader.onload = function(e){
+            const text = e.target.result;
+            filePreview.textContent += `\n--- File: ${file.name} ---\n${text}\n`;
+            const rows = text.split('\n').map(r=>r.split(','));
+            rows.forEach(cells=>{
+                if(cells.length>=3){
+                    const row = taskTable.insertRow();
+                    row.innerHTML = `
+                        <td>${taskTable.rows.length}</td>
+                        <td>${cells[0]}</td>
+                        <td>${cells[1]}</td>
+                        <td contenteditable="true">${cells[2]}</td>
+                        <td><input type="checkbox" class="complete" ${cells[3]=='1'?'checked':''}></td>
+                    `;
+                }
+            });
+            updateDashboard();
+        }
+        reader.readAsText(file);
+    }
+    else if(name.endsWith(".xls") || name.endsWith(".xlsx")){
+        reader.onload = function(e){
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data,{type:'array'});
+            const sheet = workbook.SheetNames[0];
+            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheet], {header:1});
+            filePreview.textContent += `\n--- File Excel: ${file.name} ---\n`;
+            rows.forEach(r=>filePreview.textContent += r.join(',')+'\n');
+            rows.forEach(cells=>{
+                if(cells.length>=3){
+                    const row = taskTable.insertRow();
+                    row.innerHTML = `
+                        <td>${taskTable.rows.length}</td>
+                        <td>${cells[0]}</td>
+                        <td>${cells[1]}</td>
+                        <td contenteditable="true">${cells[2]}</td>
+                        <td><input type="checkbox" class="complete" ${cells[3]=='1'?'checked':''}></td>
+                    `;
+                }
+            });
+            updateDashboard();
+        }
+        reader.readAsArrayBuffer(file);
+    }
+    else if(name.endsWith(".docx")){
+        reader.onload = function(e){
+            const arrayBuffer = e.target.result;
+            mammoth.extractRawText({arrayBuffer: arrayBuffer})
+                .then(function(result){
+                    const text = result.value;
+                    filePreview.textContent += `\n--- File Word: ${file.name} ---\n${text}\n`;
+                    // Không tự động thêm vào bảng trừ khi Word có CSV-like text
+                }).catch(err=>alert("Lỗi đọc Word: "+err));
+        }
+        reader.readAsArrayBuffer(file);
+    }
+    else if(name.endsWith(".pdf")){
+        reader.onload = function(e){
+            const typedarray = new Uint8Array(e.target.result);
+            pdfjsLib.getDocument(typedarray).promise.then(pdf=>{
+                let pdfText = '';
+                const pagePromises = [];
+                for(let i=1;i<=pdf.numPages;i++){
+                    pagePromises.push(pdf.getPage(i).then(page=>page.getTextContent().then(tc=>{
+                        const pageText = tc.items.map(t=>t.str).join(' ');
+                        pdfText += pageText + '\n';
+                    })));
+                }
+                Promise.all(pagePromises).then(()=>{
+                    filePreview.textContent += `\n--- File PDF: ${file.name} ---\n${pdfText}\n`;
+                });
+            });
+        }
+        reader.readAsArrayBuffer(file);
+    }
+    else {
+        alert("Chỉ hỗ trợ CSV, Excel, Word (.docx) và PDF!");
+    }
+});
+
+updateDashboard();
+</script>
+
+</body>
+</html>

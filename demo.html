@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bảng Chia Việc Nhóm</title>
+<title>Bảng Chia Việc Nhóm - Upload Cloud</title>
 <style>
-body { font-family: Arial, sans-serif; padding: 20px; }
+body { font-family: Arial; padding: 20px; }
 table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
 table, th, td { border: 1px solid #333; }
 th, td { padding: 10px; text-align: left; }
@@ -13,7 +13,7 @@ th { background-color: #f2f2f2; }
 td[contenteditable="true"] { background-color: #f9f9f9; }
 button { margin-right: 10px; padding: 10px 15px; cursor: pointer; }
 #dashboard { margin-top: 20px; padding: 10px; border: 1px solid #333; width: 300px; }
-#filePreview { border:1px solid #333; padding:10px; max-height:200px; overflow:auto; white-space: pre-wrap; background:#f9f9f9; }
+#fileList { border:1px solid #333; padding:10px; max-height:200px; overflow:auto; background:#f9f9f9; }
 </style>
 </head>
 <body>
@@ -45,8 +45,6 @@ button { margin-right: 10px; padding: 10px 15px; cursor: pointer; }
       <td contenteditable="true">Nhập nội dung ở đây</td>
       <td><input type="checkbox" class="complete"></td>
     </tr>
-
-
     <tr>
       <td>3</td>
       <td>Code backend</td>
@@ -54,8 +52,6 @@ button { margin-right: 10px; padding: 10px 15px; cursor: pointer; }
       <td contenteditable="true">Nhập nội dung ở đây</td>
       <td><input type="checkbox" class="complete"></td>
     </tr>
-
-
     <tr>
       <td>4</td>
       <td>Code backend</td>
@@ -63,136 +59,121 @@ button { margin-right: 10px; padding: 10px 15px; cursor: pointer; }
       <td contenteditable="true">Nhập nội dung ở đây</td>
       <td><input type="checkbox" class="complete"></td>
     </tr>
-
-
   </tbody>
 </table>
 
-<h2>Nộp File Bảng</h2>
-<form id="uploadForm">
-  <input type="file" id="fileInput" name="file" accept=".csv,.xls,.xlsx,.docx,.pdf">
-  <button type="submit">Upload & Submit</button>
-</form>
+<button onclick="exportExcel()">Xuất Excel</button>
+<button onclick="exportWord()">Xuất Word</button>
 
-<h2>File bạn vừa nộp:</h2>
-<pre id="filePreview"></pre>
+<h2>Nộp File Bảng</h2>
+<input type="file" id="fileInput" />
+<button onclick="uploadFile()">Upload File</button>
+
+<h2>Danh sách file đã nộp:</h2>
+<div id="fileList">Chưa có file nào.</div>
 
 <div id="dashboard">
   <h2>Dashboard</h2>
-  <p id="status">Hoàn thành: 0 / Tổng: 2</p>
+  <p id="status">Hoàn thành: 0 / Tổng: 4</p>
 </div>
 
-<!-- Thư viện hỗ trợ đọc Excel và Word -->
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.172/pdf.min.js"></script>
 
 <script>
+// Firebase config
+const firebaseConfig = {
+  apiKey: "API_KEY",
+  authDomain: "PROJECT_ID.firebaseapp.com",
+  projectId: "PROJECT_ID",
+  storageBucket: "PROJECT_ID.appspot.com",
+  messagingSenderId: "SENDER_ID",
+  appId: "APP_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+const storage = firebase.storage();
+const db = firebase.firestore();
+
+// DOM
 const taskTable = document.getElementById("taskTable").getElementsByTagName('tbody')[0];
 const statusText = document.getElementById("status");
-const filePreview = document.getElementById('filePreview');
+const fileList = document.getElementById('fileList');
 
+// Dashboard
 function updateDashboard() {
     const checkboxes = document.querySelectorAll('.complete');
     let completed = 0;
     checkboxes.forEach(cb => { if(cb.checked) completed++; });
     statusText.textContent = `Hoàn thành: ${completed} / Tổng: ${checkboxes.length}`;
 }
-
 taskTable.addEventListener('change', function(e){
     if(e.target.classList.contains('complete')) updateDashboard();
 });
+updateDashboard();
 
-// Upload file
-document.getElementById('uploadForm').addEventListener('submit', function(e){
-    e.preventDefault();
+// Xuất Excel/Word
+function exportExcel() {
+    let tableHTML = taskTable.parentElement.outerHTML.replace(/ /g, '%20');
+    const filename = 'tasks.xls';
+    const downloadLink = document.createElement("a");
+    downloadLink.href = 'data:application/vnd.ms-excel,' + tableHTML;
+    downloadLink.download = filename;
+    downloadLink.click();
+}
+function exportWord() {
+    let tableHTML = taskTable.parentElement.outerHTML;
+    const filename = 'tasks.doc';
+    const downloadLink = document.createElement("a");
+    downloadLink.href = 'data:application/msword,' + encodeURIComponent(tableHTML);
+    downloadLink.download = filename;
+    downloadLink.click();
+}
+
+// Upload file lên Firebase Storage
+function uploadFile() {
     const file = document.getElementById('fileInput').files[0];
     if(!file) return alert("Chưa chọn file!");
-    const name = file.name.toLowerCase();
-    const reader = new FileReader();
+    const storageRef = storage.ref('uploads/' + file.name);
+    const uploadTask = storageRef.put(file);
 
-    if(name.endsWith(".csv")) {
-        reader.onload = function(e){
-            const text = e.target.result;
-            filePreview.textContent += `\n--- File: ${file.name} ---\n${text}\n`;
-            const rows = text.split('\n').map(r=>r.split(','));
-            rows.forEach(cells=>{
-                if(cells.length>=3){
-                    const row = taskTable.insertRow();
-                    row.innerHTML = `
-                        <td>${taskTable.rows.length}</td>
-                        <td>${cells[0]}</td>
-                        <td>${cells[1]}</td>
-                        <td contenteditable="true">${cells[2]}</td>
-                        <td><input type="checkbox" class="complete" ${cells[3]=='1'?'checked':''}></td>
-                    `;
-                }
-            });
-            updateDashboard();
-        }
-        reader.readAsText(file);
-    }
-    else if(name.endsWith(".xls") || name.endsWith(".xlsx")){
-        reader.onload = function(e){
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data,{type:'array'});
-            const sheet = workbook.SheetNames[0];
-            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheet], {header:1});
-            filePreview.textContent += `\n--- File Excel: ${file.name} ---\n`;
-            rows.forEach(r=>filePreview.textContent += r.join(',')+'\n');
-            rows.forEach(cells=>{
-                if(cells.length>=3){
-                    const row = taskTable.insertRow();
-                    row.innerHTML = `
-                        <td>${taskTable.rows.length}</td>
-                        <td>${cells[0]}</td>
-                        <td>${cells[1]}</td>
-                        <td contenteditable="true">${cells[2]}</td>
-                        <td><input type="checkbox" class="complete" ${cells[3]=='1'?'checked':''}></td>
-                    `;
-                }
-            });
-            updateDashboard();
-        }
-        reader.readAsArrayBuffer(file);
-    }
-    else if(name.endsWith(".docx")){
-        reader.onload = function(e){
-            const arrayBuffer = e.target.result;
-            mammoth.extractRawText({arrayBuffer: arrayBuffer})
-                .then(function(result){
-                    const text = result.value;
-                    filePreview.textContent += `\n--- File Word: ${file.name} ---\n${text}\n`;
-                    // Không tự động thêm vào bảng trừ khi Word có CSV-like text
-                }).catch(err=>alert("Lỗi đọc Word: "+err));
-        }
-        reader.readAsArrayBuffer(file);
-    }
-    else if(name.endsWith(".pdf")){
-        reader.onload = function(e){
-            const typedarray = new Uint8Array(e.target.result);
-            pdfjsLib.getDocument(typedarray).promise.then(pdf=>{
-                let pdfText = '';
-                const pagePromises = [];
-                for(let i=1;i<=pdf.numPages;i++){
-                    pagePromises.push(pdf.getPage(i).then(page=>page.getTextContent().then(tc=>{
-                        const pageText = tc.items.map(t=>t.str).join(' ');
-                        pdfText += pageText + '\n';
-                    })));
-                }
-                Promise.all(pagePromises).then(()=>{
-                    filePreview.textContent += `\n--- File PDF: ${file.name} ---\n${pdfText}\n`;
+    uploadTask.on('state_changed', 
+        snapshot => {}, 
+        error => { alert(error); },
+        () => {
+            uploadTask.snapshot.ref.getDownloadURL().then(url => {
+                // Lưu metadata vào Firestore
+                db.collection('files').add({
+                    name: file.name,
+                    url: url,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
                 });
             });
+            alert('Upload thành công!');
         }
-        reader.readAsArrayBuffer(file);
-    }
-    else {
-        alert("Chỉ hỗ trợ CSV, Excel, Word (.docx) và PDF!");
-    }
-});
+    );
+}
 
-updateDashboard();
+// Hiển thị file đã nộp
+function loadFiles() {
+    db.collection('files').orderBy('timestamp').onSnapshot(snapshot => {
+        if(snapshot.empty) {
+            fileList.innerHTML = "Chưa có file nào.";
+            return;
+        }
+        fileList.innerHTML = "";
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const div = document.createElement('div');
+            div.innerHTML = `<a href="${data.url}" target="_blank">${data.name}</a>`;
+            fileList.appendChild(div);
+        });
+    });
+}
+loadFiles();
 </script>
 
 </body>
